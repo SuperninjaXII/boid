@@ -1,12 +1,15 @@
 import * as THREE from 'three';
+import { vec2 } from 'three/tsl';
+import { Vector2 } from 'three/webgpu';
 
 // rituals
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 1, 1000);
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 //the origin shape
+//lmao i wanted to wrap em in afunction called draw() :-(
 const BoatGeometry = new THREE.BoxGeometry(5, 2.5, 5);
 const BoatMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
 const cube = new THREE.Mesh(BoatGeometry, BoatMaterial);
@@ -26,45 +29,53 @@ scene.add(targetsphere);
 
 //some variables i guess
 let speed = 30;
-let oPos = { x: -70, y: 20 };
+//let oPos = { x: -70, y: 20 };
+let oPos = new THREE.Vector2(-70, 20);
 cube.position.set(oPos.x, oPos.y, 0);
 
-let tPos = { x: 1, y: -1 };
+//let tPos = { x: 1, y: -1 };
+let tPos = new THREE.Vector2(1, -1);
 targetsphere.position.set(tPos.x, tPos.y, 0);
 
-const velVec = { x: 0, y: 1 };
+//const velVec = { x: 0, y: 1 };
+let velVec = new THREE.Vector2(0, 1);
 
-camera.position.z = 100;
+camera.position.z = 70;
 
 // the grand util
-function lerp(x, y, t) {
-  return (1 - t) * x + t * y;
-}
+//function lerp(x, y, t) {
+// return (1 - t) * x + t * y;
+//}
 
 function update(dt) {
-  const targetDir = {
-    x: tPos.x - oPos.x,
-    y: tPos.y - oPos.y,
-  };
+  // const targetDir = {
+  // x: tPos.x - oPos.x,
+  // y: tPos.y - oPos.y,
+  // };
+  // i dont like the code below the code above is elgant
+  // targetDir.add(direction.normalize().multiplyScalar(tPos.distanceTo(oPos)).
+  //
+  const targetDir = new THREE.Vector2(tPos.x - oPos.x, tPos.y - oPos.y)
 
-  const targetDirLength = Math.hypot(targetDir.x, targetDir.y);
+  const targetDirLength = tPos.distanceTo(oPos)
   //i kind of remember after the bathroom break
   // i just find the peperndicular to the target
   //lets say the target vector is the hypotenus i just need to find theadjecent.. i can now see i might need to find the one closest but yeah
   //even better with vector i can just sawpp,, ahhhh  vectors
 
-  const adjacent1 = {
+  /*const adjacent1 = {
     x: -targetDir.y,
     y: targetDir.x
   }
   const adjacent2 = {
     x: targetDir.y,
     y: -targetDir.x
-  };
+  };*/
+  const adjacent1 = new THREE.Vector2(-targetDir.y, targetDir.x)
+  const adjacent2 = new THREE.Vector2(targetDir.y, -targetDir.x)
   // when zero
   if (targetDirLength > 0) {
-    targetDir.x /= targetDirLength;
-    targetDir.y /= targetDirLength;
+    targetDir.normalize()
   }
 
   let steerStrength = 5;
@@ -84,29 +95,25 @@ function update(dt) {
     const bestBroadside = (dot1 > dot2) ? adjacent1 : adjacent2;
     ///fisrt attempt failled
     /// cube.rotation.z = lerp(angle, Math.atan2(bestBroadside.y, bestBroadside.x), dt);
+    ////lmao even turnspeed is useless now
     const turnSpeed = 0.01;
-    velVec.x = lerp(velVec.x, bestBroadside.x, dt * turnSpeed);
-    velVec.y = lerp(velVec.y, bestBroadside.y, dt * turnSpeed);
+    velVec = velVec.clone().lerp(bestBroadside, turnSpeed);
+    //velVec.y = lerp(velVec.y, bestBroadside.y, dt * turnSpeed);
 
     //normalizing the vector as articles say :-(
     const currentSpeed = Math.hypot(velVec.x, velVec.y);
     if (currentSpeed > 0) {
-      velVec.x /= currentSpeed;
-      velVec.y /= currentSpeed;
+      velVec.normalize()
     }
 
     cube.rotation.z = Math.atan2(velVec.y, velVec.x);
-
-
-
   } else {
-    velVec.x = lerp(velVec.x, targetDir.x, dt * steerStrength);
-    velVec.y = lerp(velVec.y, targetDir.y, dt * steerStrength);
+    //this code changed behavior of the ship
+    velVec = velVec.clone().lerp(targetDir, 1)
 
     const currentSpeed = Math.hypot(velVec.x, velVec.y);
     if (currentSpeed > 0) {
-      velVec.x /= currentSpeed;
-      velVec.y /= currentSpeed;
+      velVec.normalize()
     }
 
     oPos.x += velVec.x * speed * dt;
@@ -114,8 +121,9 @@ function update(dt) {
 
     cube.position.set(oPos.x, oPos.y, 0);
     //should i rotate ??
-    const angle = Math.atan2(velVec.y, velVec.x);
-    cube.rotation.z = angle;
+    //const angle = Math.atan2(velVec.y, velVec.x);
+    //ccube.rotation.z = angle;
+    cube.rotation.z = velVec.angle();
   }
 
 }
@@ -133,11 +141,9 @@ function animate() {
   const dt = timer.getDelta()
   t += dt
 
-
   update(dt);
+
   renderer.render(scene, camera);
 
 }
-
-
 animate();
