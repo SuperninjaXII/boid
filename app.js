@@ -95,9 +95,9 @@ function update(dt) {
     const bestBroadside = (dot1 > dot2) ? adjacent1 : adjacent2;
     ///fisrt attempt failled
     /// cube.rotation.z = lerp(angle, Math.atan2(bestBroadside.y, bestBroadside.x), dt);
-    ////lmao even turnspeed is useless now
     const turnSpeed = 0.01;
-    velVec = velVec.clone().lerp(bestBroadside, turnSpeed);
+
+    velVec = velVec.lerp(bestBroadside, turnSpeed * dt);
     //velVec.y = lerp(velVec.y, bestBroadside.y, dt * turnSpeed);
 
     //normalizing the vector as articles say :-(
@@ -109,7 +109,7 @@ function update(dt) {
     cube.rotation.z = Math.atan2(velVec.y, velVec.x);
   } else {
     //this code changed behavior of the ship
-    velVec = velVec.clone().lerp(targetDir, 1)
+    velVec = velVec.lerp(targetDir, 1)
 
     const currentSpeed = Math.hypot(velVec.x, velVec.y);
     if (currentSpeed > 0) {
