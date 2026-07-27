@@ -133,7 +133,7 @@ const timer = new THREE.Timer();
 timer.connect(document);
 let t = 0
 
-
+//NOTE::ANIMATION LOOP
 function animate() {
   requestAnimationFrame(animate);
   timer.update()
