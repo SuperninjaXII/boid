@@ -27,8 +27,10 @@ const targetMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
 const targetsphere = new THREE.Mesh(targetGeometry, targetMaterial);
 scene.add(targetsphere);
 
-//some variables i guess
+//some variables i guess change these for different effects
 let speed = 30;
+const turnSpeed = 0.01;
+const steeringSpeed = 0.9
 //let oPos = { x: -70, y: 20 };
 let oPos = new THREE.Vector2(-70, 20);
 cube.position.set(oPos.x, oPos.y, 0);
@@ -78,7 +80,6 @@ function update(dt) {
     targetDir.normalize()
   }
 
-  let steerStrength = 5;
 
   // Steer away // but am chosing stop and rotate i will comment the steear awya
   if (targetDirLength < 20) {
@@ -95,7 +96,6 @@ function update(dt) {
     const bestBroadside = (dot1 > dot2) ? adjacent1 : adjacent2;
     ///fisrt attempt failled
     /// cube.rotation.z = lerp(angle, Math.atan2(bestBroadside.y, bestBroadside.x), dt);
-    const turnSpeed = 0.01;
 
     velVec = velVec.lerp(bestBroadside, turnSpeed * dt);
     //velVec.y = lerp(velVec.y, bestBroadside.y, dt * turnSpeed);
@@ -109,7 +109,7 @@ function update(dt) {
     cube.rotation.z = Math.atan2(velVec.y, velVec.x);
   } else {
     //this code changed behavior of the ship
-    velVec = velVec.lerp(targetDir, 1)
+    velVec = velVec.lerp(targetDir, steeringSpeed * dt)
 
     const currentSpeed = Math.hypot(velVec.x, velVec.y);
     if (currentSpeed > 0) {
